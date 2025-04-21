@@ -40,7 +40,10 @@ const Login = () => {
 
   const handleLogin = async (values: {username: string; password: string}) => {
     try {
-      if (values.username === 'admin' && values.password === 'admin') {
+      if (
+        values.username.toLocaleLowerCase() === 'admin' &&
+        values.password.toLocaleLowerCase() === 'admin'
+      ) {
         // await setSecureValue('token', true);
         dispatch(updateToken({token: true}));
       } else {

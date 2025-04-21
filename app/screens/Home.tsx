@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -68,6 +68,7 @@ const Home = () => {
   const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef(null);
+  const scrollInterval = useRef(null);
   const activities = useSelector(
     (state: RootState) => state.activities.entities,
   );
@@ -98,6 +99,26 @@ const Home = () => {
     },
   ];
 
+  // Add useEffect for auto-scrolling
+  useEffect(() => {
+    scrollInterval.current = setInterval(() => {
+      if (flatListRef.current) {
+        const nextIndex = (activeIndex + 1) % carouselData.length;
+        flatListRef.current.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        setActiveIndex(nextIndex);
+      }
+    }, 3000); // Change slide every 3 seconds
+
+    return () => {
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
+  }, [activeIndex]);
+
   const renderCarouselItem = ({item}: {item: any}) => (
     <View style={styles.carouselItem}>
       <Image source={item.image} style={styles.carouselImage} />
@@ -118,9 +139,7 @@ const Home = () => {
               styles.dot,
               {
                 backgroundColor:
-                  index === activeIndex
-                    ? theme.primary
-                    : 'rgba(255,255,255,0.5)',
+                  index === activeIndex ? theme.primary : theme.text + '40',
               },
             ]}
           />
@@ -149,16 +168,14 @@ const Home = () => {
                 navigation.navigate('Activities');
                 break;
               case '5':
-                navigation.navigate('ShareAchievement');
+                navigation.navigate('OrganAnalytics');
                 break;
             }
           }}
           style={({pressed}) => [
             styles.card,
-            {
-              backgroundColor: theme.primary,
-              opacity: pressed ? 0.8 : 1,
-            },
+            {backgroundColor: theme.primary},
+            pressed && styles.cardPressed,
           ]}>
           <Image source={categoryImages[item.id]} style={styles.icon} />
           <Text style={[styles.categoryName, {color: theme.text}]}>
@@ -182,8 +199,8 @@ const Home = () => {
                   styles.progressBar,
                   {
                     width: `${
-                      (parseInt(item.progress.split('/')[0]) /
-                        parseInt(item.progress.split('/')[1])) *
+                      (parseInt(item.progress.split('/')[0], 10) /
+                        parseInt(item.progress.split('/')[1], 10)) *
                       100
                     }%`,
                   },
@@ -217,6 +234,11 @@ const Home = () => {
             setActiveIndex(Math.round(x / width));
           }}
           keyExtractor={item => item.id}
+          getItemLayout={(data, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
         />
         {renderDotIndicator()}
       </View>
@@ -276,6 +298,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
+  cardPressed: {
+    opacity: 0.8,
+  },
   icon: {
     width: 60,
     height: 60,
@@ -327,13 +352,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginHorizontal: 4,
-  },
-  sectionHeader: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 24,
-    marginBottom: 16,
-    color: '#333',
   },
   achievementContainer: {
     gap: 12,
