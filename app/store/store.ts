@@ -8,6 +8,7 @@ import userSlice from './userSlice';
 import dummyNetwokSlice from './dummyNetwork';
 import chatSlice from './chatSlice';
 import activitiesSlices from './activitiesSlice';
+import trackerSlices from './trackerSlice';
 
 const rootReducer = combineReducers({
   todos: tasksSlice,
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   dummyNetwork: dummyNetwokSlice,
   chat: chatSlice,
   activities: activitiesSlices,
+  tracker: trackerSlices,
 });
 
 const persistConfig = {

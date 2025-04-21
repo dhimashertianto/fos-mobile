@@ -21,6 +21,7 @@ const categories = [
   {id: '2', name: 'User', icon: '👤'},
   {id: '3', name: 'Tracker', icon: '📊'},
   {id: '4', name: 'Activity', icon: '🏃‍♂️'},
+  {id: '5', name: 'Organ Analytics', icon: '🏃‍♂️'},
 ];
 
 // Updated carousel data with internet images
@@ -57,6 +58,7 @@ const categoryImages = {
   '2': require('../assets/images/teamwork.png'),
   '3': require('../assets/images/tracker.png'),
   '4': require('../assets/images/activity.png'),
+  '5': require('../assets/images/lungs.png'),
 };
 
 // Add this near other constant data at the top
@@ -146,6 +148,9 @@ const Home = () => {
               case '4':
                 navigation.navigate('Activities');
                 break;
+              case '5':
+                navigation.navigate('ShareAchievement');
+                break;
             }
           }}
           style={({pressed}) => [
@@ -222,7 +227,10 @@ const Home = () => {
           contentContainerStyle={styles.scrollContent}>
           <Text style={styles.header}>Categories</Text>
           {renderCategories()}
-          <Text style={styles.sectionHeader}>Achievements</Text>
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>Achievements</Text>
+          </View>
+
           {renderAchievements()}
         </ScrollView>
       </Layout>
@@ -237,6 +245,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     height: '100%',
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
   },
   header: {
     fontSize: 24,

@@ -1,48 +1,42 @@
-import React, {use, useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React from 'react';
+import {
+  Linking,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
 import Layout from '../components/Layout';
+import {RootState} from '../store/store';
+import {addCheckpoint} from '../store/trackerSlice';
 import {useTheme} from '../theme/useTheme';
 
 const Tracker = () => {
   const {theme} = useTheme();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [checkpoints, setCheckpoints] = useState<string[]>([]);
-  const [streak, setStreak] = useState(0);
+  const dispatch = useDispatch();
+  const {checkpoints, streak} = useSelector(
+    (state: RootState) => state.tracker,
+  );
 
   const submitCheckpoint = () => {
-    const today = new Date().toISOString().split('T')[0];
+    // const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const fortyFiveDaysAgo = new Date(today);
+    fortyFiveDaysAgo.setDate(today.getDate() - 3);
+
+    const todayString = today.toISOString().split('T')[0];
+
     if (!checkpoints.includes(today)) {
-      const newCheckpoints = [...checkpoints, today];
-      setCheckpoints(newCheckpoints);
-      calculateStreak(newCheckpoints);
+      dispatch(addCheckpoint(todayString));
     }
-  };
-
-  const calculateStreak = (points: string[]) => {
-    const sortedDates = [...points].sort();
-    let currentStreak = 1;
-
-    for (let i = 1; i < sortedDates.length; i++) {
-      const prevDate = new Date(sortedDates[i - 1]);
-      const currentDate = new Date(sortedDates[i]);
-      const diffDays = Math.floor(
-        (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      if (diffDays === 1) {
-        currentStreak++;
-      } else {
-        currentStreak = 1;
-      }
-    }
-
-    setStreak(currentStreak);
   };
 
   const renderCalendar = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     return (
@@ -83,10 +77,42 @@ const Tracker = () => {
     );
   };
 
+  const shareStreak = async () => {
+    try {
+      const message = `🎉 I'm celebrating ${streak} days smoke-free! Join me on this amazing journey at fos-achievement.com and let's achieve greatness together! 💪✨`;
+
+      try {
+        await Share.share({
+          message,
+        });
+      } catch (shareError) {
+        console.log('Share API failed, trying fallback');
+        // Fallback to opening a URL
+        const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+        const canOpen = await Linking.canOpenURL(url);
+
+        if (canOpen) {
+          await Linking.openURL(url);
+        } else {
+          // If WhatsApp isn't available, try a generic SMS
+          const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+          await Linking.openURL(smsUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
     <Layout>
       <View style={styles.container}>
-        <Text style={styles.title}>Activity Tracker</Text>
+        <View style={styles.sectionHeaderContainer}>
+          <Text style={styles.title}>Activity Tracker</Text>
+          <Pressable onPress={shareStreak}>
+            <Text style={styles.sectionHeader}>share</Text>
+          </Pressable>
+        </View>
         {renderCalendar()}
 
         <View style={styles.statsContainer}>
@@ -117,6 +143,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
   },
   calendar: {
     backgroundColor: '#fff',

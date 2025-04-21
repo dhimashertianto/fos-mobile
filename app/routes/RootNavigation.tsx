@@ -6,15 +6,15 @@
 import React, {useEffect} from 'react';
 import {ColorValue} from 'react-native';
 
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useDispatch, useSelector} from 'react-redux';
 
 // Hook for theme change (Light/Dark Mode)
-import {useTheme} from '../theme/useTheme';
 import {typeVariants} from '../theme/theme';
+import {useTheme} from '../theme/useTheme';
 // Get Value from Keyring (Encrypted token)
 import {getSecureValue} from '../utils/keyChain';
 // Redux slice for updating Access Token to store
@@ -23,18 +23,18 @@ import {updateToken} from '../store/userSlice';
 import {RootState} from '../store/store';
 
 // Screens
-import Login from '../screens/auth/Login';
-import Tasks from '../screens/Tasks';
-import NetworkExample from '../screens/NetworkExample';
-import Settings from '../screens/Settings';
-import Home from '../screens/Home';
-import PersonalDoctor from '../screens/PersonalDoctor';
-import User from '../screens/User';
-import Tracker from '../screens/Tracker';
 import Activities from '../screens/Activities';
+import Login from '../screens/auth/Login';
 import ChatRoom from '../screens/ChatRoom';
+import Home from '../screens/Home';
 import News from '../screens/News';
 import NewsDetail from '../screens/NewsDetail';
+import OrganAnalytics from '../screens/OrganAnalytics';
+import PersonalDoctor from '../screens/PersonalDoctor';
+import Settings from '../screens/Settings';
+import ShareAchievement from '../screens/ShareAchievement';
+import Tracker from '../screens/Tracker';
+import User from '../screens/User';
 // Icons for Bottom Tab Navigation
 const listSharpIcon = ({color}: {color: ColorValue | number}) => (
   <Icon name="list-sharp" size={30} color={color} />
@@ -123,6 +123,24 @@ export default function RootNavigation() {
               headerShown: true,
               headerBackTitle: 'Back',
               headerTitle: 'Activities',
+            }}
+          />
+          <Stack.Screen
+            name="OrganAnalytics"
+            component={OrganAnalytics}
+            options={{
+              headerShown: true,
+              headerBackTitle: 'Back',
+              headerTitle: 'Organ Analytics',
+            }}
+          />
+          <Stack.Screen
+            name="ShareAchievement"
+            component={ShareAchievement}
+            options={{
+              headerShown: false,
+              headerBackTitle: 'Back',
+              headerTitle: 'Organ Analytics',
             }}
           />
           <Stack.Screen
