@@ -4,7 +4,7 @@
  * Uncomment commented lines from return() of RootNavigation to wire Login flow
  */
 import React, {useEffect} from 'react';
-import {ColorValue} from 'react-native';
+import {ColorValue, Text, TouchableOpacity} from 'react-native';
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
@@ -18,14 +18,17 @@ import {useTheme} from '../theme/useTheme';
 // Get Value from Keyring (Encrypted token)
 import {getSecureValue} from '../utils/keyChain';
 // Redux slice for updating Access Token to store
-import {updateToken} from '../store/userSlice';
+import {clearUser, updateToken} from '../store/userSlice';
 
 import {RootState} from '../store/store';
 
 // Screens
+import Register from '..//screens/auth/Register';
+import RegisterFamily from '..//screens/auth/RegisterFamily';
 import Activities from '../screens/Activities';
 import Login from '../screens/auth/Login';
 import ChatRoom from '../screens/ChatRoom';
+import FamilyPage from '../screens/FamilyPage';
 import Home from '../screens/Home';
 import News from '../screens/News';
 import NewsDetail from '../screens/NewsDetail';
@@ -57,7 +60,6 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export default function RootNavigation() {
-  const {theme} = useTheme();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
 
@@ -158,6 +160,19 @@ export default function RootNavigation() {
               headerTitle: 'Detail News',
             })}
           />
+          <Stack.Screen
+            name="FamilyPage"
+            component={FamilyPage}
+            options={({navigation}) => ({
+              headerTitle: 'Family Pages',
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => dispatch(clearUser())}>
+                  <Text style={{marginLeft: 10}}>Logout</Text>{' '}
+                  {/* Customize as needed */}
+                </TouchableOpacity>
+              ),
+            })}
+          />
         </Stack.Navigator>
       ) : (
         <Stack.Navigator
@@ -165,6 +180,8 @@ export default function RootNavigation() {
             headerShown: false,
           }}>
           <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Register" component={Register} />
+          <Stack.Screen name="RegisterFamily" component={RegisterFamily} />
         </Stack.Navigator>
       )}
     </NavigationContainer>

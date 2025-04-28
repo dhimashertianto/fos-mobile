@@ -5,10 +5,15 @@ import {spacing, typeSizes} from '../theme/theme';
 import {InputPropsType} from '../types/components';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const Input = ({style, error, leftIcon, ...rest}: InputPropsType) => {
+const Input = ({lables, style, error, leftIcon, ...rest}: InputPropsType) => {
   const {theme} = useTheme();
+  console.log('dhimas', lables);
+
   return (
     <View style={styles.inputWrp}>
+      <Text style={[styles.label, {color: theme.color}]}>
+        {lables || 'Lables'}
+      </Text>
       <TextInput
         {...rest}
         style={[
@@ -36,6 +41,10 @@ const Input = ({style, error, leftIcon, ...rest}: InputPropsType) => {
 export {Input};
 
 const styles = StyleSheet.create({
+  label: {
+    fontSize: typeSizes.FONT_SIZE_SMALL,
+    marginBottom: spacing.containerPaddingV / 2,
+  },
   inputWrp: {
     marginBottom: spacing.cardMarginB,
     position: 'relative',
@@ -53,7 +62,7 @@ const styles = StyleSheet.create({
   leftIcon: {
     position: 'absolute',
     right: 20,
-    top: 10,
+    top: 40,
     zIndex: 1000,
   },
 });

@@ -25,4 +25,6 @@ export interface InputPropsType extends TextInputProps {
   testID?: string;
   style?: ViewStyle;
   error?: string;
+  lables?: string;
+  leftIcon?: string;
 }
