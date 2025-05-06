@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import {Button, RadioButton} from 'react-native-paper';
+import {Button, RadioButton, Switch} from 'react-native-paper';
 import {Input} from '../../components/Form';
 
 const Register = () => {
@@ -17,11 +17,11 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const [isSmoker, setIsSmoker] = useState('no');
-  const [isCancer, setIsCancer] = useState('no');
-  const [isUndergoingCancer, setIsUndergoingCancer] = useState('no');
-  const [isPasiveSmoker, setIsPasiveSmoker] = useState('no');
-  const [isUserFos, setUserFos] = useState('no');
+  const [isSmoker, setIsSmoker] = useState(false);
+  const [isCancer, setIsCancer] = useState(false);
+  const [isUndergoingCancer, setIsUndergoingCancer] = useState(false);
+  const [isPasiveSmoker, setIsPasiveSmoker] = useState(false);
+  const [isUserFos, setUserFos] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const navigation = useNavigation();
@@ -76,82 +76,67 @@ const Register = () => {
             style={styles.input}
             leftIcon="lock-closed"
           />
-          <Text style={styles.question}>Are you an active smoker??</Text>
-          <RadioButton.Group onValueChange={setIsSmoker} value={isSmoker}>
-            <View style={styles.radioRow}>
-              <RadioButton value="yes" />
-              <Text style={styles.radioLabel}>Yes</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="no" />
-              <Text style={styles.radioLabel}>No</Text>
-            </View>
-          </RadioButton.Group>
 
-          <Text style={styles.question}>Are you suffering from cancer?</Text>
-          <RadioButton.Group onValueChange={setIsCancer} value={isCancer}>
-            <View style={styles.radioRow}>
-              <RadioButton value="yes" />
-              <Text style={styles.radioLabel}>Yes</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="no" />
-              <Text style={styles.radioLabel}>No</Text>
-            </View>
-          </RadioButton.Group>
-
-          <Text style={styles.question}>
-            Are you currently undergoing cancer treatment?
-          </Text>
-          <RadioButton.Group
-            onValueChange={setIsUndergoingCancer}
-            value={isUndergoingCancer}>
-            <View style={styles.radioRow}>
-              <RadioButton value="yes" />
-              <Text style={styles.radioLabel}>Yes</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="no" />
-              <Text style={styles.radioLabel}>No</Text>
-            </View>
-          </RadioButton.Group>
-
-          <Text style={styles.question}>Are you a passive smoker?</Text>
-          <RadioButton.Group
-            onValueChange={setIsPasiveSmoker}
-            value={isPasiveSmoker}>
-            <View style={styles.radioRow}>
-              <RadioButton value="yes" />
-              <Text style={styles.radioLabel}>Yes</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="no" />
-              <Text style={styles.radioLabel}>No</Text>
-            </View>
-          </RadioButton.Group>
-
-          <Text style={styles.question}>Are you a new user FOS?</Text>
-          <RadioButton.Group onValueChange={setUserFos} value={isUserFos}>
-            <View style={styles.radioRow}>
-              <RadioButton value="yes" />
-              <Text style={styles.radioLabel}>Yes</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="no" />
-              <Text style={styles.radioLabel}>No</Text>
-            </View>
-          </RadioButton.Group>
-
-          {/* <View style={styles.switchRow}>
-            <Text style={styles.question}>Enable notifications</Text>
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>Are you an active smoker??</Text>
             <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
+              value={isSmoker}
+              onValueChange={setIsSmoker}
               ios_backgroundColor="#ccc"
               trackColor={{false: '#767577', true: '#34C759'}}
               thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
             />
-          </View> */}
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>Are you suffering from cancer?</Text>
+            <Switch
+              value={isCancer}
+              onValueChange={setIsCancer}
+              ios_backgroundColor="#ccc"
+              trackColor={{false: '#767577', true: '#34C759'}}
+              thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
+            />
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>
+              Are you currently undergoing cancer treatment?
+            </Text>
+            <Switch
+              value={isUndergoingCancer}
+              onValueChange={setIsUndergoingCancer}
+              ios_backgroundColor="#ccc"
+              trackColor={{false: '#767577', true: '#34C759'}}
+              thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
+            />
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>Are you a passive smoker?</Text>
+            <Switch
+              value={isPasiveSmoker}
+              onValueChange={setIsPasiveSmoker}
+              ios_backgroundColor="#ccc"
+              trackColor={{false: '#767577', true: '#34C759'}}
+              thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>Are you a new user FOS?</Text>
+            <Switch
+              value={isUserFos}
+              onValueChange={setUserFos}
+              ios_backgroundColor="#ccc"
+              trackColor={{false: '#767577', true: '#34C759'}}
+              thumbColor={isUserFos ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
+            />
+          </View>
         </ScrollView>
 
         <View style={styles.bottomButton}>
@@ -191,11 +176,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
   },
-  question: {
-    fontSize: 16,
-    marginTop: 15,
-    marginBottom: 5,
-  },
   radioRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -205,10 +185,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   switchRow: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 5,
+    // backgroundColor: 'red',
+  },
+  question: {
+    flex: 1,
+    fontSize: 16,
+    marginTop: 15,
+    marginBottom: 5,
+    // backgroundColor: 'grey',
+  },
+  switch: {
+    // flex: 1,
+    // backgroundColor: 'green',
   },
   bottomButton: {
     padding: 15,

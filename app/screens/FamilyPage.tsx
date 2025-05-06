@@ -1,12 +1,25 @@
-import {Alert, BackHandler, StyleSheet, Text, View} from 'react-native';
+import {
+  Alert,
+  BackHandler,
+  Dimensions,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import React from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../store/store';
 import {useFocusEffect} from '@react-navigation/native';
 import {clearUser} from '../store/userSlice';
+import Layout from '../components/Layout';
+import {useTheme} from '../theme/useTheme';
 
 const FamilyPage = () => {
   const dispatch = useDispatch();
+  const {theme} = useTheme();
   const activities = useSelector(
     (state: RootState) => state.activities.entities,
   );
@@ -54,47 +67,116 @@ const FamilyPage = () => {
       icon: '❤️',
     },
   ];
+
+  const categories = [
+    {
+      id: '1',
+      name: 'Dr. Dhimas',
+      icon: '👨‍⚕️',
+      gender: 'Male',
+      speciality: 'Cardiologist',
+    },
+    {
+      id: '2',
+      name: 'Dr. Dewi',
+      icon: '👤',
+      gender: 'Female',
+      speciality: 'Dermatologist',
+    },
+    {
+      id: '3',
+      name: 'Dr. Anggi',
+      icon: '📊',
+      gender: 'Female',
+      speciality: 'Pediatrician',
+    },
+    {
+      id: '4',
+      name: 'Dr. Angga',
+      icon: '🏃‍♂️',
+      gender: 'Male',
+      speciality: 'Neurologist',
+    },
+  ];
+
+  const renderCategoryCard = ({item}: {item: any}) => (
+    <Pressable
+      // onPress={() => handleDoctorPress(item)}
+      style={({pressed}) => [
+        styles.card,
+        {
+          backgroundColor: theme.primary,
+          opacity: pressed ? 0.8 : 1,
+        },
+      ]}>
+      <Image
+        source={
+          item.gender === 'Male'
+            ? require('../assets/images/doctor_male.png')
+            : require('../assets/images/doctor_female.png')
+        }
+        style={styles.doctorImage}
+      />
+      <Text style={styles.categoryName}>{item.name}</Text>
+      <Text style={styles.categoryName}>{item.speciality}</Text>
+    </Pressable>
+  );
+
   return (
-    <View style={styles.achievementContainer}>
-      {achievements.map(item => (
-        <View key={item.id} style={styles.achievementCard}>
-          <Text style={styles.achievementIcon}>{item.icon}</Text>
-          <View style={styles.achievementContent}>
-            <Text style={styles.achievementTitle}>{item.title}</Text>
-            <View style={styles.progressContainer}>
-              <View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: `${
-                      (parseInt(item.progress.split('/')[0], 10) /
-                        parseInt(item.progress.split('/')[1], 10)) *
-                      100
-                    }%`,
-                  },
-                ]}
-              />
+    <>
+      <Layout>
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryCard}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+        />
+      </Layout>
+      <View style={styles.achievementContainer}>
+        {achievements.map(item => (
+          <View key={item.id} style={styles.achievementCard}>
+            <Text style={styles.achievementIcon}>{item.icon}</Text>
+            <View style={styles.achievementContent}>
+              <Text style={styles.achievementTitle}>{item.title}</Text>
+              <View style={styles.progressContainer}>
+                <View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${
+                        (parseInt(item.progress.split('/')[0], 10) /
+                          parseInt(item.progress.split('/')[1], 10)) *
+                        100
+                      }%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText}>{item.progress}</Text>
             </View>
-            <Text style={styles.progressText}>{item.progress}</Text>
+            {item.completed && (
+              <View style={styles.completedBadge}>
+                <Text style={styles.completedText}>✓</Text>
+              </View>
+            )}
           </View>
-          {item.completed && (
-            <View style={styles.completedBadge}>
-              <Text style={styles.completedText}>✓</Text>
-            </View>
-          )}
-        </View>
-      ))}
-    </View>
+        ))}
+      </View>
+    </>
   );
 };
 
 export default FamilyPage;
 
+const {width} = Dimensions.get('window');
+const cardWidth = (width - 60) / 2; // 60 = padding + gap
+
 const styles = StyleSheet.create({
   achievementContainer: {
     gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingHorizontal: 22,
     backgroundColor: 'white',
     flex: 1,
   },
@@ -158,5 +240,46 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 16,
+  },
+
+  container: {
+    flex: 1,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  listContainer: {
+    // gap: 16,
+    // backgroundColor: 'red',
+    marginTop: 20,
+  },
+  card: {
+    width: cardWidth,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 7,
+    marginBottom: 14,
+    borderWidth: 0.5,
+    borderColor: '#E0E0E0',
+  },
+  icon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  doctorImage: {
+    width: 64,
+    height: 64,
+    marginBottom: 8,
   },
 });

@@ -167,8 +167,7 @@ export default function RootNavigation() {
               headerTitle: 'Family Pages',
               headerLeft: () => (
                 <TouchableOpacity onPress={() => dispatch(clearUser())}>
-                  <Text style={{marginLeft: 10}}>Logout</Text>{' '}
-                  {/* Customize as needed */}
+                  <Text style={{marginLeft: 10}}>Logout</Text>
                 </TouchableOpacity>
               ),
             })}
