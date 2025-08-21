@@ -1,4 +1,6 @@
-import {createSlice} from '@reduxjs/toolkit';
+// userSlice.ts
+import { createSlice } from '@reduxjs/toolkit';
+import { RootState } from './store';
 
 const initialState = {
   name: '',
@@ -11,7 +13,7 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     updateUser(state, action) {
-      const {name, username, token} = action.payload;
+      const { name, username, token } = action.payload;
       state.name = name;
       state.username = username;
       state.token = token;
@@ -25,6 +27,10 @@ const userSlice = createSlice({
   },
 });
 
-export const {updateUser, updateToken, clearUser} = userSlice.actions;
+export const { updateUser, updateToken, clearUser } = userSlice.actions;
+
+// 🔑 Selector untuk ambil user state
+export const selectUser = (state: RootState) => state.user;
+export const selectToken = (state: RootState) => state.user.token;
 
 export default userSlice.reducer;

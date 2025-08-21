@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import {
   Alert,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Pressable,
   ScrollView,
@@ -20,7 +21,7 @@ const AppIcon = require('../../assets/images//appicon.png');
 import {useNavigation} from '@react-navigation/native';
 
 import {useDispatch} from 'react-redux';
-import {updateToken} from '../../store/userSlice';
+import {updateToken, updateUser} from '../../store/userSlice';
 
 import {useTheme} from '../../theme/useTheme';
 import {setSecureValue} from '../../utils/keyChain';
@@ -50,7 +51,8 @@ const Login = () => {
       if (
         values.username.toLocaleLowerCase() === 'userfamily' &&
         values.password.toLocaleLowerCase() === 'userfamily'
-      ) {
+      ) { // keluarga ngecek perkembangan
+        await dispatch(updateUser({name: 'Family User',username:'family'}));
         await dispatch(updateToken({token: true}));
         navigation.navigate('FamilyPage');
         return;
@@ -59,16 +61,25 @@ const Login = () => {
       if (
         values.username.toLocaleLowerCase() === 'newuser' &&
         values.password.toLocaleLowerCase() === 'newuser'
-      ) {
+      ) { //pasien (shortcut to chat)
+        await dispatch(updateUser({name: 'New User',username:'user'}));
         await dispatch(updateToken({token: true}));
         navigation.navigate('PersonalDoctor');
+        return;
+      }
+
+      if(values.username.toLocaleLowerCase() === 'doctor' &&
+        values.password.toLocaleLowerCase() === 'doctor') { // doctor (shortcut to chat)
+        await dispatch(updateUser({name: 'Doctor',username:'doctor'}));
+        await dispatch(updateToken({token: true}));
+        navigation.navigate('ChatList');
         return;
       }
 
       if (
         values.username.toLocaleLowerCase() === 'admin' &&
         values.password.toLocaleLowerCase() === 'admin'
-      ) {
+      ) { // tetep user (full page)
         // await setSecureValue('token', true);
         dispatch(updateToken({token: true}));
       } else {
@@ -95,6 +106,7 @@ const Login = () => {
 
   return (
     <Layout>
+      <KeyboardAvoidingView behavior="padding" style={{flex: 1}}>
       <ScrollView contentContainerStyle={styles.scrollview}>
         <View style={styles.container}>
           <View style={styles.iconWrapper}>
@@ -171,6 +183,7 @@ const Login = () => {
           </Card>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
       <Modal
         animationType="slide"
         transparent={true}

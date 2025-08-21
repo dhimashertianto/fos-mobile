@@ -34,6 +34,7 @@ import News from '../screens/News';
 import NewsDetail from '../screens/NewsDetail';
 import OrganAnalytics from '../screens/OrganAnalytics';
 import PersonalDoctor from '../screens/PersonalDoctor';
+import ChatList from '../screens/ChatList';
 import Settings from '../screens/Settings';
 import ShareAchievement from '../screens/ShareAchievement';
 import Tracker from '../screens/Tracker';
@@ -98,6 +99,15 @@ export default function RootNavigation() {
               headerShown: true,
               headerBackTitle: 'Back',
               headerTitle: 'Personal Doctor',
+            }}
+          />
+          <Stack.Screen
+            name="ChatList"
+            component={ChatList}
+            options={{
+              headerShown: true,
+              headerBackTitle: 'Back',
+              headerTitle: 'Chat List',
             }}
           />
           <Stack.Screen

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "186604064770",
+    "project_id": "fos-mobile-68cb4",
+    "storage_bucket": "fos-mobile-68cb4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186604064770:android:a676998ee5e8413476571b",
+        "android_client_info": {
+          "package_name": "com.rn_redux_boilerplate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkUWb6dBmX1L83pGb9Njm27JsfRpxyUhI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

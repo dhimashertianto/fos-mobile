@@ -14,28 +14,28 @@ import {useNavigation} from '@react-navigation/native';
 const categories = [
   {
     id: '1',
-    name: 'Dr. Dhimas',
+    name: 'dr. Dhimas',
     icon: '👨‍⚕️',
     gender: 'Male',
     speciality: 'Cardiologist',
   },
   {
     id: '2',
-    name: 'Dr. Dewi',
+    name: 'dr. Dewi',
     icon: '👤',
     gender: 'Female',
     speciality: 'Dermatologist',
   },
   {
     id: '3',
-    name: 'Dr. Anggi',
+    name: 'dr. Anggi',
     icon: '📊',
     gender: 'Female',
     speciality: 'Pediatrician',
   },
   {
     id: '4',
-    name: 'Dr. Angga',
+    name: 'dr.Angga',
     icon: '🏃‍♂️',
     gender: 'Male',
     speciality: 'Neurologist',
@@ -47,6 +47,7 @@ const PersonalDoctor = () => {
   const navigation = useNavigation();
 
   const handleDoctorPress = (doctor: any) => {
+
     navigation.navigate('ChatRoom', {
       doctorId: doctor.id,
       doctorName: doctor.name,

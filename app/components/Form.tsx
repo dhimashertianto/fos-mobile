@@ -7,7 +7,6 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const Input = ({lables, style, error, leftIcon, ...rest}: InputPropsType) => {
   const {theme} = useTheme();
-  console.log('dhimas', lables);
 
   return (
     <View style={styles.inputWrp}>

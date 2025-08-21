@@ -12,13 +12,14 @@ import {
 import React from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../store/store';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {clearUser} from '../store/userSlice';
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
 
 const FamilyPage = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const {theme} = useTheme();
   const activities = useSelector(
     (state: RootState) => state.activities.entities,
@@ -69,39 +70,52 @@ const FamilyPage = () => {
   ];
 
   const categories = [
-    {
-      id: '1',
-      name: 'Dr. Dhimas',
-      icon: '👨‍⚕️',
-      gender: 'Male',
-      speciality: 'Cardiologist',
-    },
-    {
-      id: '2',
-      name: 'Dr. Dewi',
-      icon: '👤',
-      gender: 'Female',
-      speciality: 'Dermatologist',
-    },
-    {
-      id: '3',
-      name: 'Dr. Anggi',
-      icon: '📊',
-      gender: 'Female',
-      speciality: 'Pediatrician',
-    },
-    {
-      id: '4',
-      name: 'Dr. Angga',
-      icon: '🏃‍♂️',
-      gender: 'Male',
-      speciality: 'Neurologist',
-    },
-  ];
+  {
+    id: '1',
+    name: 'dr. Dhimas',
+    icon: '👨‍⚕️',
+    gender: 'Male',
+    speciality: 'Cardiologist',
+  },
+  {
+    id: '2',
+    name: 'dr. Dewi',
+    icon: '👤',
+    gender: 'Female',
+    speciality: 'Dermatologist',
+  },
+  {
+    id: '3',
+    name: 'dr. Anggi',
+    icon: '📊',
+    gender: 'Female',
+    speciality: 'Pediatrician',
+  },
+  {
+    id: '4',
+    name: 'dr.Angga',
+    icon: '🏃‍♂️',
+    gender: 'Male',
+    speciality: 'Neurologist',
+  },
+];
+
+  const handleDoctorPress = (doctor: any) => {
+
+    navigation.navigate('ChatRoom', {
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      doctorSpeciality: doctor.speciality,
+      doctorImage:
+        doctor.gender === 'Male'
+          ? require('../assets/images/doctor_male.png')
+          : require('../assets/images/doctor_female.png'),
+    });
+  };
 
   const renderCategoryCard = ({item}: {item: any}) => (
     <Pressable
-      // onPress={() => handleDoctorPress(item)}
+      onPress={() => handleDoctorPress(item)}
       style={({pressed}) => [
         styles.card,
         {

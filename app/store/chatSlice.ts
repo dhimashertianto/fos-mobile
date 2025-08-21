@@ -2,7 +2,7 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 interface Message {
   text: string;
-  sender: 'user' | 'doctor';
+  sender: 'user' | 'doctor' | 'family' | 'admin';
 }
 
 interface ChatState {
