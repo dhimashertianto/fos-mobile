@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect, useState} from 'react';
 import {
   Text,
   FlatList,
@@ -10,6 +10,7 @@ import {
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
 import {useNavigation} from '@react-navigation/native';
+import  firestore  from '@react-native-firebase/firestore';
 
 const categories = [
   {
@@ -45,6 +46,27 @@ const categories = [
 const PersonalDoctor = () => {
   const {theme} = useTheme();
   const navigation = useNavigation();
+  const [doctors, setDoctors] = useState([]);
+
+  useEffect(()=>{
+    if(doctors.length === 0){
+      fetchDoctors();
+    }
+  },[doctors])
+
+  const fetchDoctors = async() => {
+    try{
+      const doctorSnapshot = await firestore()
+      .collection('users')
+      .where('isDoctor','==',true)
+      .get();
+      const doctorList = doctorSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+      setDoctors(doctorList.sort((a,b)=> a?.name - b?.name));
+      console.log("Fetched doctors:",doctorList);
+    }catch(error){
+      console.error("Error fetching doctors:",error);
+    }
+  }
 
   const handleDoctorPress = (doctor: any) => {
 
@@ -85,7 +107,7 @@ const PersonalDoctor = () => {
   return (
     <Layout>
       <FlatList
-        data={categories}
+        data={doctors}
         renderItem={renderCategoryCard}
         keyExtractor={item => item.id}
         numColumns={2}

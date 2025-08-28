@@ -25,6 +25,8 @@ import {updateToken, updateUser} from '../../store/userSlice';
 
 import {useTheme} from '../../theme/useTheme';
 import {setSecureValue} from '../../utils/keyChain';
+import firestore from '@react-native-firebase/firestore';
+
 interface ValuesType {
   username: string;
   password: string;
@@ -36,7 +38,7 @@ const LoginSchema = Yup.object().shape({
   username: Yup.string()
     .min(5, 'Username must contain atleast 5 characters')
     .required('Required'),
-  password: Yup.string().min(5, 'Too Short!').required('Required'),
+  password: Yup.string().min(3, 'Too Short!').required('Required'),
 });
 
 const Login = () => {
@@ -44,50 +46,38 @@ const Login = () => {
   const navigation = useNavigation();
   const {theme} = useTheme();
 
+
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleLogin = async (values: {username: string; password: string}) => {
-    try {
-      if (
-        values.username.toLocaleLowerCase() === 'userfamily' &&
-        values.password.toLocaleLowerCase() === 'userfamily'
-      ) { // keluarga ngecek perkembangan
-        await dispatch(updateUser({name: 'Family User',username:'family'}));
-        await dispatch(updateToken({token: true}));
-        navigation.navigate('FamilyPage');
-        return;
-      }
+    const {username, password} = values;
+    console.log('Login values:', values);
+    const users = await firestore()
+      .collection('users')
+      .where('username', '==', username)
+      .where('password', '==', password)
+      .get({source: 'server'});
+    console.log('Login users:', users);
+    if (!users.empty) {
+      const userData = users.docs[0].data();
 
-      if (
-        values.username.toLocaleLowerCase() === 'newuser' &&
-        values.password.toLocaleLowerCase() === 'newuser'
-      ) { //pasien (shortcut to chat)
-        await dispatch(updateUser({name: 'New User',username:'user'}));
-        await dispatch(updateToken({token: true}));
-        navigation.navigate('PersonalDoctor');
-        return;
-      }
-
-      if(values.username.toLocaleLowerCase() === 'doctor' &&
-        values.password.toLocaleLowerCase() === 'doctor') { // doctor (shortcut to chat)
-        await dispatch(updateUser({name: 'Doctor',username:'doctor'}));
-        await dispatch(updateToken({token: true}));
-        navigation.navigate('ChatList');
-        return;
-      }
-
-      if (
-        values.username.toLocaleLowerCase() === 'admin' &&
-        values.password.toLocaleLowerCase() === 'admin'
-      ) { // tetep user (full page)
-        // await setSecureValue('token', true);
-        dispatch(updateToken({token: true}));
-      } else {
-        Alert.alert('Login Failed', 'Invalid credentials');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert('Error', 'An error occurred during login');
+      await dispatch(
+        updateUser({
+          name: userData.name,
+          username: userData.username,
+          speciality: userData.speciality || '',
+          email: userData.email,
+          role : userData.isDoctor ? 'doctor' : (userData.isUserFamily ? 'family' : 'user'),
+          isUserFos: userData.isUserFos || false,
+          isUserFamily: userData.isUserFamily || false,
+          isDoctor: userData.isDoctor || false,
+        }),
+      );
+      await dispatch(updateToken({token: true}));
+    }
+    if (users.empty) {
+      Alert.alert('Login Failed', 'Invalid credentials');
+      return;
     }
   };
 
@@ -96,6 +86,10 @@ const Login = () => {
     switch (params) {
       case 'newUser':
         navigation.navigate('Register');
+        break;
+
+      case 'doctor':
+        navigation.navigate('RegisterDoctor');
         break;
 
       default:
@@ -204,10 +198,17 @@ const Login = () => {
             <Text style={styles.modalText}>What Kind of User Are You?</Text>
             <Pressable
               style={[styles.button, {backgroundColor: theme.primary}]}
+              onPress={() => handleRegister('doctor')}>
+              <Text style={styles.textStyle}>New Doctor FOS</Text>
+            </Pressable>
+            <View style={{height: 10}} />
+            <Pressable
+              style={[styles.button, {backgroundColor: theme.primary}]}
               onPress={() => handleRegister('newUser')}>
               <Text style={styles.textStyle}>New User FOS</Text>
             </Pressable>
             <View style={{height: 10}} />
+
             <Pressable
               style={[styles.button, {backgroundColor: theme.primary}]}
               onPress={() => handleRegister('family')}>
@@ -281,6 +282,8 @@ const styles = StyleSheet.create({
   loginRegisterText: {
     color: 'blue',
     fontStyle: 'italic',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   centeredView: {
     flex: 1,

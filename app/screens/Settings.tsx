@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {clearUser} from '../store/userSlice';
 import {removeSecureValue} from '../utils/keyChain';
 
@@ -23,6 +23,7 @@ const avatar = require('../assets/images/avatar_male.png');
 const Settings = () => {
   const {theme, toggleTheme} = useTheme();
   const dispatch = useDispatch();
+  const user = useSelector((state: any) => state.user);
 
   const handleLogout = () => {
     // Remove both access token and refresh token from Local
@@ -50,7 +51,7 @@ const Settings = () => {
 
             <View style={styles.profileInfo}>
               <Text style={[styles.name, {color: theme.color}]}>
-                John Smith
+                {user.username}
               </Text>
               <Text style={[styles.username, {color: theme.color}]}>
                 Day 7 Smoke-Free

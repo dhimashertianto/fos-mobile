@@ -9,23 +9,47 @@ import {
   Text,
   View,
 } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../store/store';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {clearUser} from '../store/userSlice';
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
+import firestore, { doc } from '@react-native-firebase/firestore';
+
 
 const FamilyPage = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const [doctors, setDoctors] = React.useState([]);
   const {theme} = useTheme();
   const activities = useSelector(
     (state: RootState) => state.activities.entities,
   );
 
+
+  const fetchDoctors = async () => {
+    try {
+      const doctorSnapshot = await firestore()
+        .collection('users')
+        .where('isDoctor', '==', true)
+        .get({source: 'server'});
+      const doctorList = doctorSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+      setDoctors(doctorList.sort((a, b) => a?.name - b?.name));
+    } catch (error) {
+      console.error('Error fetching doctors: ', error);
+    }
+  };
+
+  useEffect(() => {
+    if (doctors.length === 0) {
+      fetchDoctors();
+    }
+  }, [doctors]);
+
   useFocusEffect(
+    
     React.useCallback(() => {
       const onBackPress = () => {
         Alert.alert('Hold on!', 'Are you sure you want to go back?', [
@@ -140,7 +164,7 @@ const FamilyPage = () => {
     <>
       <Layout>
         <FlatList
-          data={categories}
+          data={doctors}
           renderItem={renderCategoryCard}
           keyExtractor={item => item.id}
           numColumns={2}

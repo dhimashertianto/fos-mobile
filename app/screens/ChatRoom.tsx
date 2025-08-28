@@ -57,7 +57,7 @@ const ChatRoom = () => {
         .orderBy('timestamp', 'desc')
         .limit(1);
 
-      const snapshot = await messagesRef.get();
+      const snapshot = await messagesRef.get({source: 'server'});
 
       if (!snapshot.empty) {
         const lastMessageDoc = snapshot.docs[0];
@@ -93,15 +93,7 @@ const ChatRoom = () => {
           .sort((a, b) => a.timestamp - b.timestamp);
         setMessages(newMessages);
       });
-    // const messagesSnapshot = await firestore()
-    //   .collection('chats')
-    //   .doc(chatId)
-    //   .collection('messages')
-    //   .orderBy('timestamp', 'asc')
-    //   .get();
-    // const msgs:any = messagesSnapshot.docs.map(doc => doc.data());
-    // console.log("msgs",);
-    // setMessages(msgs.sort((a, b) => a.timestamp - b.timestamp));
+    
   };
 
   const chats = useSelector((state: RootState) => state.chat.chats);
@@ -112,10 +104,10 @@ const ChatRoom = () => {
       dispatch(
         addMessage({
           chatId,
-          message: {text: inputText, sender: 'user'},
+          message: {text: inputText, sender: user.username},
         }),
       );
-      if (user.username !== 'doctor') {
+      if (user.role !== 'doctor') {
         firestore()
           .collection('chats')
           .doc(chatId)
@@ -161,7 +153,7 @@ const ChatRoom = () => {
         .doc(chatId)
         .collection('messages');
 
-      const snapshot = await messagesRef.get();
+      const snapshot = await messagesRef.get({source: 'server'});
 
       const batch = firestore().batch();
 
@@ -217,7 +209,7 @@ const ChatRoom = () => {
     return (
       <View style={styles.header}>
         <Image source={doctorImage} style={styles.doctorImage} />
-        <Text style={styles.doctorName}>{doctorName}</Text>
+        <Text style={styles.doctorName}>{user.role == 'doctor' ? route.params.participants.find(c=> c!== user.username) : doctorName}</Text>
         <Text style={styles.speciality}>{doctorSpeciality}</Text>
         <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
           <Text style={styles.clearButtonText}>Clear Chat</Text>

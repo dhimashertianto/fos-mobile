@@ -15,10 +15,11 @@ import {Input} from '../../components/Form';
 import firestore from '@react-native-firebase/firestore';
 
 
-const RegisterFamily = () => {
+const RegisterDoctor = () => {
   const [name, setName] = useState('');
-  const [username,setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [username,setUsername] = useState('');
+  const [speciality,setSpeciality] = useState('');
   const [isUserId, setIsUserId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +29,7 @@ const RegisterFamily = () => {
   const [isUndergoingCancer, setIsUndergoingCancer] = useState('no');
   const [isPasiveSmoker, setIsPasiveSmoker] = useState('no');
   const [isUserFos, setUserFos] = useState(false);
-  const [isUserFamily, setIsUserFamily] = useState(true);
+  const [isDoctor, setIsDoctor] = useState(true);
 
   const navigation = useNavigation();
 
@@ -36,15 +37,17 @@ const RegisterFamily = () => {
     const userSnapshot = await firestore()
       .collection('users')
       .where('username', '==', username)
-      .get();
+      .get({source: 'server'});
+    console.log("userSnapshot:",userSnapshot);
     return !userSnapshot.empty;
   };
+
   const handleRegister = async () => {
     setIsLoading(true);
-    const exists = await checkUsernameExists(username);
     const formData = {
-      username,
       name,
+      username,
+      speciality,
       email,
       password,
       isSmoker,
@@ -52,9 +55,9 @@ const RegisterFamily = () => {
       isUndergoingCancer,
       isPasiveSmoker,
       isUserFos,
-      isUserFamily,
+      isDoctor,
     };
-    console.log('Form Data:', formData);
+    const exists = await checkUsernameExists(username);
     if(exists) {
       Alert.alert('Username already exists. Please choose another one.');
       setIsLoading(false);
@@ -65,19 +68,20 @@ const RegisterFamily = () => {
       .collection('users')
       .add(formData)
       .then(() => {
-        console.log('Family added!');
+        console.log('Doctor added!');
         Alert.alert('Registration Successful', 'You can now log in.', [
           { text: 'OK', onPress: () => navigation.navigate('Login') }
         ]);
         setIsLoading(false);
-        navigation.navigate('Login');
       })
-      .catch((error) => {
-        console.error('Error adding family:', error);
-        Alert.alert('Registration Failed', 'Please try again.');
+      .catch((error:any) => {
+        console.error('Error adding doctor: ', error);
+        Alert.alert('Registration Failed', 'An error occurred. Please try again.');
         setIsLoading(false);
       });
+
     }
+
   };
 
   return (
@@ -86,31 +90,40 @@ const RegisterFamily = () => {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.header}>Register Family</Text>
+          <Text style={styles.header}>Register Doctor</Text>
           <Input
             testID="Login.Username"
-            placeholder="Username Family"
+            placeholder="Username Doctor"
             onChangeText={setUsername}
-            lables={'Your Username'}
+            lables={'Username Doctor'}
             value={username}
-            keyboardType="default"
-            style={styles.input}
-          />
-          <Input
-            testID="Login.Username"
-            placeholder="Email Family"
-            onChangeText={setEmail}
-            lables={'Email Family'}
-            value={email}
             keyboardType="email-address"
             style={styles.input}
           />
           <Input
             testID="Login.Username"
-            placeholder="Patient Username"
-            onChangeText={setIsUserId}
-            lables={'Patient Username'}
-            value={isUserId}
+            placeholder="Name Doctor"
+            onChangeText={setName}
+            lables={'Name Doctor'}
+            value={name}
+            keyboardType="default"
+            style={styles.input}
+          />
+           <Input
+            testID="Login.Username"
+            placeholder="Speciality Doctor"
+            onChangeText={setSpeciality}
+            lables={'Speciality Doctor'}
+            value={speciality}
+            keyboardType="default"
+            style={styles.input}
+          />
+          <Input
+            testID="Login.Username"
+            placeholder="Email Doctor"
+            onChangeText={setEmail}
+            lables={'Email'}
+            value={email}
             keyboardType="email-address"
             style={styles.input}
           />
@@ -127,8 +140,8 @@ const RegisterFamily = () => {
         </ScrollView>
 
         <View style={styles.bottomButton}>
-          <Button mode="contained" onPress={handleRegister}>
-            Register
+          <Button mode="contained" onPress={handleRegister} disabled={isLoading}>
+            {isLoading ? 'Registering...' : 'Register'}
           </Button>
         </View>
       </KeyboardAvoidingView>
@@ -189,4 +202,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterFamily;
+export default RegisterDoctor;

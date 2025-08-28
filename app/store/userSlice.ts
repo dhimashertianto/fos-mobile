@@ -6,6 +6,7 @@ const initialState = {
   name: '',
   username: '',
   token: '',
+  role: 'user' | 'doctor' | 'admin' | 'family' ,
 };
 
 const userSlice = createSlice({
@@ -13,10 +14,11 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     updateUser(state, action) {
-      const { name, username, token } = action.payload;
+      const { name, username, token,role } = action.payload;
       state.name = name;
       state.username = username;
       state.token = token;
+      state.role = role;
     },
     updateToken(state, action) {
       state.token = action.payload.token;

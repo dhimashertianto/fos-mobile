@@ -1,6 +1,7 @@
 import {useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -11,23 +12,35 @@ import {
 } from 'react-native';
 import {Button, RadioButton, Switch} from 'react-native-paper';
 import {Input} from '../../components/Form';
+import firestore from '@react-native-firebase/firestore';
 
 const Register = () => {
-  const [name, setName] = useState('');
+  const [username, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isSmoker, setIsSmoker] = useState(false);
   const [isCancer, setIsCancer] = useState(false);
   const [isUndergoingCancer, setIsUndergoingCancer] = useState(false);
   const [isPasiveSmoker, setIsPasiveSmoker] = useState(false);
-  const [isUserFos, setUserFos] = useState(false);
+  const [isUserFos, setUserFos] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const navigation = useNavigation();
-  const handleRegister = () => {
+  const checkUsernameExists = async (username: string) => {
+    const userSnapshot = await firestore()
+      .collection('users')  
+      .where('username', '==', username)
+      .get();
+    return !userSnapshot.empty;
+  };
+  const handleRegister = async () => {
+    setIsLoading(true);
+    const exists = await checkUsernameExists(username);
+   
     const formData = {
-      name,
+      username,
       email,
       password,
       isSmoker,
@@ -37,6 +50,28 @@ const Register = () => {
       isUserFos,
       notificationsEnabled,
     };
+    if (exists) {
+      Alert.alert('Username already exists. Please choose another one.');
+      setIsLoading(false);
+      return;
+    }
+    else{
+      firestore()
+      .collection('users')
+      .add(formData)
+      .then(() => {
+        console.log('User added!');
+        Alert.alert('Registration Successful', 'You can now log in.', [
+          { text: 'OK', onPress: () => navigation.navigate('Login') }
+        ]);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error adding user:', error);
+        Alert.alert('Registration Failed', 'Please try again.');
+        setIsLoading(false);
+      });
+    }
     console.log('Form Data:', formData);
     navigation.navigate('Login');
   };
@@ -50,10 +85,10 @@ const Register = () => {
           <Text style={styles.header}>Register</Text>
           <Input
             testID="Login.Username"
-            placeholder="Username / Email"
-            onChangeText={setName}
+            placeholder="Username"
+            onChangeText={setUserName}
             lables={'Username'}
-            value={name}
+            value={username}
             keyboardType="email-address"
             style={styles.input}
           />
@@ -61,7 +96,7 @@ const Register = () => {
             testID="Login.Username"
             placeholder="Email"
             onChangeText={setEmail}
-            lables={'Username / Email'}
+            lables={'Email'}
             value={email}
             keyboardType="email-address"
             style={styles.input}
@@ -129,6 +164,7 @@ const Register = () => {
           <View style={styles.switchRow}>
             <Text style={styles.question}>Are you a new user FOS?</Text>
             <Switch
+              disabled
               value={isUserFos}
               onValueChange={setUserFos}
               ios_backgroundColor="#ccc"

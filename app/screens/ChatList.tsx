@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Text,
   FlatList,
@@ -58,76 +58,78 @@ type RootStackParamList = {
 };
 
 const ChatList = () => {
-  const [chatLists, setChatLists] = React.useState([]);
-  const [loaded, setLoaded] = React.useState(false);
-  const {theme} = useTheme();
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const user = useSelector(selectUser);
+    const [chatLists, setChatLists] = React.useState([]);
+    const [loaded, setLoaded] = React.useState(false);
+    const {theme} = useTheme();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    const unsubscribeChats = firestore()
-      .collection('chats')
-      .onSnapshot(snapshot => {
-        const chatDocs = snapshot.docs;
-        const newChatLists: any[] = [];
-        const messageUnsubscribers: (() => void)[] = [];
 
-        chatDocs.forEach(doc => {
-          const data = doc.data();
-          const chatId = doc.id;
-
-          const doctor = categories.find(c =>
-            data.participants.includes(c.name),
-          );
-
-          const chatItem = {
-            id: chatId,
-            ...data,
-            doctor,
-            lastMessage: null,
-          };
-
-          newChatLists.push(chatItem);
-
-          const unsubscribeMessage = firestore()
+    const user = useSelector(selectUser);
+    console.log("Current user:",user);
+    useEffect(() => {
+        if (!user || !user.name) return;
+        const unsubscribeChats = firestore()
             .collection('chats')
-            .doc(chatId)
-            .collection('messages')
-            .orderBy('timestamp', 'desc')
-            .limit(1)
-            .onSnapshot(messageSnapshot => {
-              const lastMessageDoc = messageSnapshot.docs[0];
-              const lastMessageData = lastMessageDoc?.data();
+            .where('participants', 'array-contains', user.name)
+            .onSnapshot(snapshot => {
+                const chatDocs = snapshot.docs;
+                const newChatLists: any[] = [];
+                const messageUnsubscribers: (() => void)[] = [];
 
-              const lastMessage = lastMessageDoc
-                ? {
-                    id: lastMessageDoc.id,
-                    ...lastMessageData,
-                    isUnread:
-                      lastMessageData.sender !== user.username &&
-                      !lastMessageData.readBy?.includes(user.username),
-                  }
-                : null;
+                chatDocs.forEach(doc => {
+                const data = doc.data();
+                const chatId = doc.id;
 
-              setChatLists(prevChats =>
-                prevChats.map(c => (c.id === chatId ? {...c, lastMessage} : c)),
-              );
+                const doctor = user.name;
+
+                const chatItem = {
+                    id: chatId,
+                    ...data,
+                    doctor,
+                    lastMessage: null,
+                };
+
+                newChatLists.push(chatItem);
+
+                const unsubscribeMessage = firestore()
+                    .collection('chats')
+                    .doc(chatId)
+                    .collection('messages')
+                    .orderBy('timestamp', 'desc')
+                    .limit(1)
+                    .onSnapshot(messageSnapshot => {
+                    const lastMessageDoc = messageSnapshot.docs[0];
+                    const lastMessageData = lastMessageDoc?.data();
+
+                    const lastMessage = lastMessageDoc
+                        ? {
+                            id: lastMessageDoc.id,
+                            ...lastMessageData,
+                            isUnread:
+                            lastMessageData.sender !== user.username &&
+                            !lastMessageData.readBy?.includes(user.username),
+                        }
+                        : null;
+
+                    setChatLists(prevChats =>
+                        prevChats.map(c => (c.id === chatId ? {...c, lastMessage} : c)),
+                    );
+                    });
+
+                messageUnsubscribers.push(unsubscribeMessage);
+                });
+
+                setChatLists(newChatLists);
+                setLoaded(true);
+
+                return () => {
+                messageUnsubscribers.forEach(unsub => unsub());
+                };
             });
 
-          messageUnsubscribers.push(unsubscribeMessage);
-        });
-
-        setChatLists(newChatLists);
-        setLoaded(true);
-
         return () => {
-          messageUnsubscribers.forEach(unsub => unsub());
+        unsubscribeChats();
         };
-      });
-
-    return () => {
-      unsubscribeChats();
-    };
   }, [categories]);
 
   const handleDoctorPress = (item: any) => {
