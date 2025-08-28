@@ -1,4 +1,4 @@
-import React, { use, useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {
   Text,
   FlatList,
@@ -6,17 +6,14 @@ import {
   StyleSheet,
   Dimensions,
   Image,
-  Touchable,
-  TouchableOpacity,
+  View,
 } from 'react-native';
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectUser, updateUser } from '../store/userSlice';
-import { doc, setDoc } from '../../node_modules/@react-native-firebase/firestore/lib/modular/index';
-import { tokens } from 'react-native-paper/lib/typescript/styles/themes/v3/tokens';
+import {useDispatch, useSelector} from 'react-redux';
+import {selectUser} from '../store/userSlice';
 
 const categories = [
   {
@@ -58,114 +55,160 @@ type RootStackParamList = {
     doctorSpeciality: string;
     doctorImage: any;
   };
-  // ...other routes
 };
 
 const ChatList = () => {
-    const [chatLists, setChatLists] = React.useState([]);
-    const [loaded,setLoaded] = React.useState(false);
-    const [doctor,setDoctor] = React.useState(null);
-    const {theme} = useTheme();
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-    const user = useSelector(selectUser);
-    const dispatch = useDispatch();
+  const [chatLists, setChatLists] = React.useState([]);
+  const [loaded, setLoaded] = React.useState(false);
+  const {theme} = useTheme();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const user = useSelector(selectUser);
 
+  useEffect(() => {
+    const unsubscribeChats = firestore()
+      .collection('chats')
+      .onSnapshot(snapshot => {
+        const chatDocs = snapshot.docs;
+        const newChatLists: any[] = [];
+        const messageUnsubscribers: (() => void)[] = [];
 
-    useEffect(() => {
-      if(!loaded && chatLists.length === 0) {
-        getChatLists()
-      }
-        return()=> {
-            console.log("Loaded",chatLists)
-        }
-    }, [loaded,chatLists]);
+        chatDocs.forEach(doc => {
+          const data = doc.data();
+          const chatId = doc.id;
 
+          const doctor = categories.find(c =>
+            data.participants.includes(c.name),
+          );
 
-    const getChatLists = async () => {
-        try {
-            const snapshot = await firestore().collection('chats').get();
+          const chatItem = {
+            id: chatId,
+            ...data,
+            doctor,
+            lastMessage: null,
+          };
 
-            const chats = snapshot.docs.map(doc => {
-                const data = doc.data();
-                const doctor = categories.find(c =>
-                    data.participants.includes(c.name)
-                );
+          newChatLists.push(chatItem);
 
-                return {
-                    id: doc.id,
-                    ...data,
-                    doctor, // simpan detail dokter di object chat
-                };
+          const unsubscribeMessage = firestore()
+            .collection('chats')
+            .doc(chatId)
+            .collection('messages')
+            .orderBy('timestamp', 'desc')
+            .limit(1)
+            .onSnapshot(messageSnapshot => {
+              const lastMessageDoc = messageSnapshot.docs[0];
+              const lastMessageData = lastMessageDoc?.data();
+
+              const lastMessage = lastMessageDoc
+                ? {
+                    id: lastMessageDoc.id,
+                    ...lastMessageData,
+                    isUnread:
+                      lastMessageData.sender !== user.username &&
+                      !lastMessageData.readBy?.includes(user.username),
+                  }
+                : null;
+
+              setChatLists(prevChats =>
+                prevChats.map(c => (c.id === chatId ? {...c, lastMessage} : c)),
+              );
             });
 
-            setChatLists(chats);
-            setLoaded(true);
-        } catch (error) {
-            console.error('Error fetching chat lists:', error);
-        }
-    };
+          messageUnsubscribers.push(unsubscribeMessage);
+        });
 
+        setChatLists(newChatLists);
+        setLoaded(true);
 
-    const handleDoctorPress = (item: any) => {  
-        navigation.navigate('ChatRoom', {
-            chatId:item.id,
-            participants:item.participants,
-            doctorId: item.doctor.id,
-            doctorName: item.doctor.name,
-            doctorSpeciality: item.doctor.speciality,
-            doctorImage:
-                item.doctor.gender === 'Male'
-                ? require('../assets/images/avatar_male.png')
-                : require('../assets/images/avatar_female.png'),
-            });
+        return () => {
+          messageUnsubscribers.forEach(unsub => unsub());
+        };
+      });
+
+    return () => {
+      unsubscribeChats();
     };
+  }, [categories]);
+
+  const handleDoctorPress = (item: any) => {
+    navigation.navigate('ChatRoom', {
+      chatId: item.id,
+      participants: item.participants,
+      doctorId: item.doctor.id,
+      doctorName: item.doctor.name,
+      doctorSpeciality: item.doctor.speciality,
+      doctorImage:
+        item.doctor.gender === 'Male'
+          ? require('../assets/images/avatar_male.png')
+          : require('../assets/images/avatar_female.png'),
+    });
+  };
 
   const renderCategoryCard = ({item}: {item: any}) => {
+    const doctor = item.doctor;
+    const username = item.participants.find(
+      (participant: any) => participant !== user.username,
+    );
 
-    const doctor = item.doctor; 
-    const username = item.participants.find((participant: any) => participant !== user.username);
     if (!doctor) return null;
-    return(
-    <Pressable
+
+    const messageText = item.lastMessage?.message?.text || '(Belum ada pesan)';
+    const messageTime = item.lastMessage?.timestamp
+      ? new Date(item.lastMessage.timestamp.toDate()).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '';
+
+    return (
+      <Pressable
         onPress={() => handleDoctorPress(item)}
         style={({pressed}) => [
-            styles.card,
-            {
+          styles.card,
+          {
             backgroundColor: theme.primary,
             opacity: pressed ? 0.8 : 1,
-            },
+          },
         ]}>
         <Image
-            source={
-            username === 'user' || username === "family"
-                ? require('../assets/images/avatar_male.png')
-                : require('../assets/images/avatar_female.png')
-            }
-            style={styles.doctorImage}
+          source={
+            username === 'user' || username === 'family'
+              ? require('../assets/images/avatar_male.png')
+              : require('../assets/images/avatar_female.png')
+          }
+          style={styles.doctorImage}
         />
-        <Text style={styles.categoryName}>{username}</Text>
-
-    </Pressable>
-  )};
+        <View>
+          <Text style={styles.categoryName}>{username}</Text>
+          <Text
+            style={[
+              styles.lastMessageText,
+              item.lastMessage?.isUnread && styles.unreadText,
+            ]}>
+            {item.lastMessage?.isUnread ? 'New Message' : messageText}
+          </Text>
+          {messageTime ? (
+            <Text style={styles.messageTime}>{messageTime}</Text>
+          ) : null}
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <Layout>
-        <TouchableOpacity onPress={() => getChatLists()}>
-            <Text style={styles.header}>Reload</Text>  
-        </TouchableOpacity>
-        <FlatList
-            data={chatLists}
-            renderItem={renderCategoryCard}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-        />
+      <FlatList
+        data={chatLists}
+        renderItem={renderCategoryCard}
+        keyExtractor={item => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+      />
     </Layout>
   );
 };
 
 const {width} = Dimensions.get('window');
-const cardWidth = (width - 60) / 2; // 60 = padding + gap
 
 const styles = StyleSheet.create({
   container: {
@@ -188,7 +231,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginHorizontal: 7,
     marginBottom: 14,
     borderWidth: 0.5,
@@ -199,14 +241,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: 'white',
   },
   doctorImage: {
     width: 64,
     height: 64,
     marginBottom: 8,
+    marginRight: 16,
+  },
+  lastMessageText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+  unreadText: {
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  messageTime: {
+    fontSize: 10,
+    color: '#555',
+    marginTop: 2,
   },
 });
 

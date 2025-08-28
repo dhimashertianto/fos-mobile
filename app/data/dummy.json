@@ -1,0 +1,46 @@
+[
+  {
+    "username": "userfamily_destia",
+    "password": "userfamily_destia",
+    "name": "mama destia",
+    "role": "family",
+    "navigateTo": "FamilyPage"
+  },
+  {
+    "username": "newuser_destia",
+    "password": "newuser_destia",
+    "name": "destia",
+    "role": "user",
+    "navigateTo": "PersonalDoctor"
+  },
+  {
+    "username": "destia",
+    "password": "destia",
+    "name": "destia",
+    "role": "user",
+    "navigateTo": "PersonalDoctor"
+  },
+  {
+    "username": "doctor_andre",
+    "password": "doctor_andre",
+    "name": "dr. Dhimas",
+    "role": "doctor",
+    "navigateTo": "ChatList"
+    // pages chatlist and cannot to another pages
+  },
+  {
+    "username": "doctor_dewi",
+    "password": "doctor_dewi",
+    "name": "dr. Dewi",
+    "role": "doctor",
+    "navigateTo": "ChatList"
+    // pages chatlist and cannot to another pages
+  },
+  {
+    "username": "admin",
+    "password": "admin",
+    "name": "Admin",
+    "role": "admin",
+    "navigateTo": null
+  }
+]

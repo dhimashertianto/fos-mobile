@@ -1,4 +1,4 @@
-import React, { use } from 'react';
+import React, {use, useEffect} from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import {addMessage, clearChat, deleteMessage} from '../store/chatSlice';
 import {RootState} from '../store/store';
 import firestore from '@react-native-firebase/firestore';
-import { selectUser } from '../store/userSlice';
-
-
-
-
+import {selectUser} from '../store/userSlice';
 
 const ChatRoom = () => {
   const route = useRoute();
@@ -30,33 +26,73 @@ const ChatRoom = () => {
   const [inputText, setInputText] = React.useState('');
   const [messages, setMessages] = React.useState([]);
   const user = useSelector(selectUser);
-  console.log("user",user)
-  console.log("Route Params", route.params)
-
+  console.log('user', user);
+  console.log('Route Params', route.params);
 
   // Generate a unique chat ID using doctor name
-  const chatId = route.params.chatId || React.useMemo(
-    () =>
-      `chat_${doctorName.replace(/[^a-zA-Z0-9]/g, '_').replace(/\s/g, '')}_${user.username}`,
-    [doctorName],
-  );
-  console.log("chatId",chatId)
+  const chatId =
+    route.params.chatId ||
+    React.useMemo(
+      () =>
+        `chat_${doctorName.replace(/[^a-zA-Z0-9]/g, '_').replace(/\s/g, '')}_${
+          user.username
+        }`,
+      [doctorName],
+    );
+  console.log('chatId', chatId);
   // Get messages from Redux store
   // const messages = useSelector(
   //   (state: RootState) => state.chat.chats[chatId] || [],
   // );
-  React.useEffect(() => {
+  useEffect(() => {
     getServerMessages();
   }, [chatId]);
 
+  useEffect(() => {
+    const markLastMessageAsRead = async () => {
+      const messagesRef = firestore()
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', 'desc')
+        .limit(1);
+
+      const snapshot = await messagesRef.get();
+
+      if (!snapshot.empty) {
+        const lastMessageDoc = snapshot.docs[0];
+        const data = lastMessageDoc.data();
+
+        if (
+          data.sender !== user.username &&
+          !data.readBy?.includes(user.username)
+        ) {
+          await lastMessageDoc.ref.update({
+            readBy: firestore.FieldValue.arrayUnion(user.username),
+          });
+        }
+      }
+    };
+
+    markLastMessageAsRead();
+  }, [chatId]);
+
   const getServerMessages = async () => {
-    firestore().collection('chats').doc(chatId).collection("messages").onSnapshot(snapshot => {
-      const newMessages = snapshot.docs.map((doc) => { 
-        return {
-          ...doc.data(), id: doc.id
-    }}).sort((a, b) => a.timestamp - b.timestamp);
-      setMessages(newMessages); 
-    })
+    firestore()
+      .collection('chats')
+      .doc(chatId)
+      .collection('messages')
+      .onSnapshot(snapshot => {
+        const newMessages = snapshot.docs
+          .map(doc => {
+            return {
+              ...doc.data(),
+              id: doc.id,
+            };
+          })
+          .sort((a, b) => a.timestamp - b.timestamp);
+        setMessages(newMessages);
+      });
     // const messagesSnapshot = await firestore()
     //   .collection('chats')
     //   .doc(chatId)
@@ -66,13 +102,11 @@ const ChatRoom = () => {
     // const msgs:any = messagesSnapshot.docs.map(doc => doc.data());
     // console.log("msgs",);
     // setMessages(msgs.sort((a, b) => a.timestamp - b.timestamp));
-    
   };
 
-
   const chats = useSelector((state: RootState) => state.chat.chats);
-  console.log("chats",chats)
-  console.log("messages",messages)
+  console.log('chats', chats);
+  console.log('messages', messages);
   const sendMessage = () => {
     if (inputText.trim()) {
       dispatch(
@@ -81,34 +115,54 @@ const ChatRoom = () => {
           message: {text: inputText, sender: 'user'},
         }),
       );
-      if(user.username !== "doctor"){
-        firestore().collection('chats').doc(chatId).set({
-          participants: [user.username, doctorName],
-        }, {merge: true}).then(() => {
-          console.log('Chat created or updated in Firestore');
-        }).catch((error) => {
-          console.error('Error creating or updating chat in Firestore:', error);
-        });
+      if (user.username !== 'doctor') {
+        firestore()
+          .collection('chats')
+          .doc(chatId)
+          .set(
+            {
+              participants: [user.username, doctorName],
+            },
+            {merge: true},
+          )
+          .then(() => {
+            console.log('Chat created or updated in Firestore');
+          })
+          .catch(error => {
+            console.error(
+              'Error creating or updating chat in Firestore:',
+              error,
+            );
+          });
       }
-      firestore().collection('chats').doc(chatId).collection('messages').add({
-        chatId,
-        message:{ text: inputText, sender: user.username || 'user' },
-        timestamp: firestore.FieldValue.serverTimestamp(),
-      }).then(() => {
-        console.log('Message sent to Firestore');
-      }).catch((error) => {
-        console.error('Error sending message to Firestore:', error);
-      });
+      firestore()
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add({
+          chatId,
+          message: {text: inputText, sender: user.username || 'user'},
+          timestamp: firestore.FieldValue.serverTimestamp(),
+        })
+        .then(() => {
+          console.log('Message sent to Firestore');
+        })
+        .catch(error => {
+          console.error('Error sending message to Firestore:', error);
+        });
       setInputText('');
     }
   };
 
   const handleClearChat = () => {
-    firestore().collection('chats').doc(chatId).delete()
+    firestore()
+      .collection('chats')
+      .doc(chatId)
+      .delete()
       .then(() => {
         console.log('Chat cleared from Firestore');
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Error clearing chat from Firestore:', error);
       });
     setMessages([]);
@@ -116,49 +170,55 @@ const ChatRoom = () => {
     dispatch(clearChat(chatId));
   };
 
-  const handleDeleteMessage = (message:any)=> {
+  const handleDeleteMessage = (message: any) => {
     dispatch(deleteMessage({chatId, messageId: message.id}));
-    firestore().collection('chats').doc(chatId).collection('messages').doc(message.id).delete()
+    firestore()
+      .collection('chats')
+      .doc(chatId)
+      .collection('messages')
+      .doc(message.id)
+      .delete()
       .then(() => {
         console.log('Message deleted from Firestore');
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Error deleting message from Firestore:', error);
       });
   };
 
   const renderHeader = () => {
-    if(user.username === "doctor"){
-      return(
-          <View style={styles.header}>
-            <Image source={doctorImage} style={styles.doctorImage} />
-            <Text style={styles.doctorName}>{route.params.participants.find(c => c !== route.params.doctorName)}</Text>
-            <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
-              <Text style={styles.clearButtonText}>Clear Chat</Text>
-            </TouchableOpacity>
-      </View>
-      )
-    }  
-    return(
-      <View style={styles.header}>
+    if (user.username === 'doctor') {
+      return (
+        <View style={styles.header}>
           <Image source={doctorImage} style={styles.doctorImage} />
-          <Text style={styles.doctorName}>{doctorName}</Text>
-          <Text style={styles.speciality}>{doctorSpeciality}</Text>
-          <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
+          <Text style={styles.doctorName}>
+            {route.params.participants.find(c => c !== route.params.doctorName)}
+          </Text>
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={handleClearChat}>
             <Text style={styles.clearButtonText}>Clear Chat</Text>
           </TouchableOpacity>
         </View>
-      )
-  }
+      );
+    }
+    return (
+      <View style={styles.header}>
+        <Image source={doctorImage} style={styles.doctorImage} />
+        <Text style={styles.doctorName}>{doctorName}</Text>
+        <Text style={styles.speciality}>{doctorSpeciality}</Text>
+        <TouchableOpacity style={styles.clearButton} onPress={handleClearChat}>
+          <Text style={styles.clearButtonText}>Clear Chat</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <Layout>
       {renderHeader()}
       {/* Add your chat UI components here */}
       <View style={styles.chatContainer}>
-
-
-        
         <ScrollView
           ref={scrollViewRef => {
             if (scrollViewRef) {
@@ -176,35 +236,39 @@ const ChatRoom = () => {
                   ? styles.userMessage
                   : styles.doctorMessage,
               ]}>
-              <Text style={message.message.sender === user.username ? styles.userMessageText : styles.messageText}>{message.message.text}</Text>
+              <Text
+                style={
+                  message.message.sender === user.username
+                    ? styles.userMessageText
+                    : styles.messageText
+                }>
+                {message.message.text}
+              </Text>
               {message.message.sender === user.username && (
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => handleDeleteMessage(message)}>
                   <Text style={styles.deleteButtonText}>×</Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
               )}
               <Text style={styles.timestamp}>
                 {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
               </Text>
-              
             </View>
           ))}
         </ScrollView>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Type a message..."
-
-            />
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <Text style={styles.sendButtonText}>Send</Text>
-            </TouchableOpacity>
-          </View>
-
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <Text style={styles.sendButtonText}>Send</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </Layout>
   );
@@ -243,7 +307,7 @@ const styles = StyleSheet.create({
   },
   messageListContent: {
     paddingBottom: 16,
-    flexDirection:'column'
+    flexDirection: 'column',
   },
   messageBubble: {
     maxWidth: '80%',
