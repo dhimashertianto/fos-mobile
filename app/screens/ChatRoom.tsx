@@ -154,20 +154,32 @@ const ChatRoom = () => {
     }
   };
 
-  const handleClearChat = () => {
-    firestore()
-      .collection('chats')
-      .doc(chatId)
-      .delete()
-      .then(() => {
-        console.log('Chat cleared from Firestore');
-      })
-      .catch(error => {
-        console.error('Error clearing chat from Firestore:', error);
+  const handleClearChat = async () => {
+    try {
+      const messagesRef = firestore()
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages');
+
+      const snapshot = await messagesRef.get();
+
+      const batch = firestore().batch();
+
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
       });
-    setMessages([]);
-    setInputText('');
-    dispatch(clearChat(chatId));
+
+      await batch.commit();
+      await firestore().collection('chats').doc(chatId).delete();
+
+      console.log('Chat and all messages cleared from Firestore');
+
+      setMessages([]);
+      setInputText('');
+      dispatch(clearChat(chatId));
+    } catch (error) {
+      console.error('Error clearing chat and messages from Firestore:', error);
+    }
   };
 
   const handleDeleteMessage = (message: any) => {
@@ -298,7 +310,6 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   messageList: {
     flex: 1,
