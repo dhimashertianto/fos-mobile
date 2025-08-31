@@ -1,6 +1,14 @@
-import React from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import React from 'react';
+import {
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {deleteNewsById} from '../services';
 import {useTheme} from '../theme/useTheme';
 
 const NewsDetail = ({route}) => {
@@ -8,15 +16,34 @@ const NewsDetail = ({route}) => {
   const {item} = route.params;
   const {theme} = useTheme();
 
+  const handlePressDeleteNews = async id => {
+    try {
+      await deleteNewsById(id);
+      Alert.alert('Berita berhasil dihapus');
+      navigation.goBack();
+    } catch (err) {
+      console.error('Gagal hapus berita:', err.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Image source={{uri: item.imageUrl}} style={styles.image} />
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.description}>{item.description}</Text>
+      <Image source={{uri: item?.gambar_url}} style={styles.image} />
+      <Text style={styles.title}>{item?.judul}</Text>
+      <Text style={styles.description}>{item?.isi}</Text>
+      <Text style={styles.description}>{item?.penulis}</Text>
+      <Text style={styles.description}>{item?.tanggal}</Text>
+      <Text style={styles.description}>{item?.kategori}</Text>
       <TouchableOpacity
         style={[styles.button, {backgroundColor: theme.primary}]}
         onPress={() => navigation.goBack()}>
         <Text style={styles.buttonText}>Go Back</Text>
+      </TouchableOpacity>
+      <View style={{height: 16}} />
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: theme.error}]}
+        onPress={() => handlePressDeleteNews(item?.id)}>
+        <Text style={styles.buttonText}>Deleted News</Text>
       </TouchableOpacity>
     </View>
   );
