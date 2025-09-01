@@ -58,78 +58,77 @@ type RootStackParamList = {
 };
 
 const ChatList = () => {
-    const [chatLists, setChatLists] = React.useState([]);
-    const [loaded, setLoaded] = React.useState(false);
-    const {theme} = useTheme();
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [chatLists, setChatLists] = React.useState([]);
+  const [loaded, setLoaded] = React.useState(false);
+  const {theme} = useTheme();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
+  const user = useSelector(selectUser);
+  console.log('Current user:', user);
+  useEffect(() => {
+    if (!user || !user.name) return;
+    const unsubscribeChats = firestore()
+      .collection('chats')
+      .where('participants', 'array-contains', user.name)
+      .onSnapshot(snapshot => {
+        const chatDocs = snapshot.docs;
+        const newChatLists: any[] = [];
+        const messageUnsubscribers: (() => void)[] = [];
 
-    const user = useSelector(selectUser);
-    console.log("Current user:",user);
-    useEffect(() => {
-        if (!user || !user.name) return;
-        const unsubscribeChats = firestore()
+        chatDocs.forEach(doc => {
+          const data = doc.data();
+          const chatId = doc.id;
+
+          const doctor = user.name;
+
+          const chatItem = {
+            id: chatId,
+            ...data,
+            doctor,
+            lastMessage: null,
+          };
+
+          newChatLists.push(chatItem);
+
+          const unsubscribeMessage = firestore()
             .collection('chats')
-            .where('participants', 'array-contains', user.name)
-            .onSnapshot(snapshot => {
-                const chatDocs = snapshot.docs;
-                const newChatLists: any[] = [];
-                const messageUnsubscribers: (() => void)[] = [];
+            .doc(chatId)
+            .collection('messages')
+            .orderBy('timestamp', 'desc')
+            .limit(1)
+            .onSnapshot(messageSnapshot => {
+              const lastMessageDoc = messageSnapshot.docs[0];
+              const lastMessageData = lastMessageDoc?.data();
 
-                chatDocs.forEach(doc => {
-                const data = doc.data();
-                const chatId = doc.id;
+              const lastMessage = lastMessageDoc
+                ? {
+                    id: lastMessageDoc.id,
+                    ...lastMessageData,
+                    isUnread:
+                      lastMessageData.sender !== user.username &&
+                      !lastMessageData.readBy?.includes(user.username),
+                  }
+                : null;
 
-                const doctor = user.name;
-
-                const chatItem = {
-                    id: chatId,
-                    ...data,
-                    doctor,
-                    lastMessage: null,
-                };
-
-                newChatLists.push(chatItem);
-
-                const unsubscribeMessage = firestore()
-                    .collection('chats')
-                    .doc(chatId)
-                    .collection('messages')
-                    .orderBy('timestamp', 'desc')
-                    .limit(1)
-                    .onSnapshot(messageSnapshot => {
-                    const lastMessageDoc = messageSnapshot.docs[0];
-                    const lastMessageData = lastMessageDoc?.data();
-
-                    const lastMessage = lastMessageDoc
-                        ? {
-                            id: lastMessageDoc.id,
-                            ...lastMessageData,
-                            isUnread:
-                            lastMessageData.sender !== user.username &&
-                            !lastMessageData.readBy?.includes(user.username),
-                        }
-                        : null;
-
-                    setChatLists(prevChats =>
-                        prevChats.map(c => (c.id === chatId ? {...c, lastMessage} : c)),
-                    );
-                    });
-
-                messageUnsubscribers.push(unsubscribeMessage);
-                });
-
-                setChatLists(newChatLists);
-                setLoaded(true);
-
-                return () => {
-                messageUnsubscribers.forEach(unsub => unsub());
-                };
+              setChatLists(prevChats =>
+                prevChats.map(c => (c.id === chatId ? {...c, lastMessage} : c)),
+              );
             });
 
+          messageUnsubscribers.push(unsubscribeMessage);
+        });
+
+        setChatLists(newChatLists);
+        setLoaded(true);
+
         return () => {
-        unsubscribeChats();
+          messageUnsubscribers.forEach(unsub => unsub());
         };
+      });
+
+    return () => {
+      unsubscribeChats();
+    };
   }, [categories]);
 
   const handleDoctorPress = (item: any) => {
@@ -205,6 +204,14 @@ const ChatList = () => {
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Belum ada data</Text>
+            <Text style={styles.emptySubtitle}>
+              Data akan muncul di sini setelah tersedia.
+            </Text>
+          </View>
+        }
       />
     </Layout>
   );
@@ -213,6 +220,24 @@ const ChatList = () => {
 const {width} = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    maxWidth: width * 0.8,
+  },
   container: {
     flex: 1,
   },

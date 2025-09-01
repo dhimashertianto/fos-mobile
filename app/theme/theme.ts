@@ -24,6 +24,9 @@ export interface themeType {
   cardBorderColor: string;
   accent: string;
   error: string;
+  text: string;
+  textSecondary: string;
+  background: string;
 }
 
 interface themesType {
@@ -79,6 +82,9 @@ const themes: themesType = {
     cardBorderColor: '#EEECEC',
     accent: '#0071ff',
     error: '#B00020',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    background: '#F9FAFB',
   },
   dark: {
     name: 'dark',
@@ -89,6 +95,9 @@ const themes: themesType = {
     cardBorderColor: '#1A1A1A',
     accent: '#0071ff',
     error: '#B00020',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    background: '#111827',
   },
 };
 

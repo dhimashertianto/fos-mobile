@@ -96,8 +96,6 @@ const News = () => {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
 
-    console.log(formattedDate); // Output: 01-Sep-2025
-
     return (
       <Pressable
         style={styles.newsItem}
