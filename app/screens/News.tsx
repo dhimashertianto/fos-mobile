@@ -16,9 +16,12 @@ import {FAB} from 'react-native-paper';
 import Layout from '../components/Layout';
 import {createNews, getNews} from '../services';
 import moment from 'moment';
+import {useSelector} from 'react-redux';
+import {RootState} from 'app/store/store';
 
 const News = () => {
   const navigation = useNavigation();
+  const user = useSelector((state: RootState) => state.user);
 
   const [berita, setBerita] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,7 +68,9 @@ const News = () => {
       penulis,
       tanggal: moment().format('YYYY-MM-DDTHH:mm:ss'),
       kategori,
-      gambar_url: gambarUrl || 'https://example.com/default-image.jpg',
+      gambar_url:
+        gambarUrl ||
+        'https://plus.unsplash.com/premium_photo-1707080369554-359143c6aa0b?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     };
 
     try {
@@ -80,18 +85,35 @@ const News = () => {
     }
   };
 
-  const renderItem = ({item}) => (
-    <Pressable
-      style={styles.newsItem}
-      onPress={() => navigation.navigate('NewsDetail', {item})}>
-      <Image source={{uri: item.gambar_url}} style={styles.image} />
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.judul}</Text>
-        <Text style={styles.title}>{item.penulis}</Text>
-        <Text style={styles.title}>{item.tanggal}</Text>
-      </View>
-    </Pressable>
-  );
+  const renderItem = ({item}) => {
+    const date = new Date(item.tanggal);
+
+    const options = {day: '2-digit', month: 'short', year: 'numeric'};
+    const formattedDate = date
+      .toLocaleDateString('en-GB', options)
+      .replace(/ /g, '-');
+
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    console.log(formattedDate); // Output: 01-Sep-2025
+
+    return (
+      <Pressable
+        style={styles.newsItem}
+        onPress={() => navigation.navigate('NewsDetail', {item})}>
+        <Image source={{uri: item.gambar_url}} style={styles.image} />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{item.judul}</Text>
+          <Text style={styles.penulis}>{item.penulis}</Text>
+          <View style={styles.tanggalContainer}>
+            <Text style={styles.tanggal}>{formattedDate}</Text>
+            <Text style={styles.tanggal}>{`${hours}:${minutes}`}</Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <Layout>
@@ -101,13 +123,17 @@ const News = () => {
         renderItem={renderItem}
         ListHeaderComponent={<Text style={styles.header}>News</Text>}
       />
-      <View style={styles.containerfab}>
-        <FAB
-          style={styles.fab}
-          onPress={() => setModalVisible(true)}
-          label="Tambah Berita"
-        />
-      </View>
+
+      {user?.role.toString() === 'admin' && (
+        <View style={styles.containerfab}>
+          <FAB
+            style={styles.fab}
+            onPress={() => setModalVisible(true)}
+            label="Tambah Berita"
+          />
+        </View>
+      )}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -172,23 +198,36 @@ const styles = StyleSheet.create({
   },
   newsItem: {
     flexDirection: 'row',
-    padding: 15,
+    padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     alignItems: 'center',
   },
   image: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 60,
     marginRight: 15,
     borderRadius: 5,
   },
   textContainer: {
     flex: 1,
+    justifyContent: 'space-between',
+    textAlign: 'left',
+    alignContent: 'space-around',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    alignItems: 'flex-start',
+  },
+  penulis: {
+    fontSize: 14,
+    color: '#555',
+  },
+  tanggal: {
+    fontSize: 14,
+    color: '#999',
   },
   description: {
     fontSize: 14,
@@ -206,6 +245,11 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
 
+  tanggalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',

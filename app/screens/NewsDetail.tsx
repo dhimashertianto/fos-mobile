@@ -10,9 +10,12 @@ import {
 } from 'react-native';
 import {deleteNewsById} from '../services';
 import {useTheme} from '../theme/useTheme';
+import {useSelector} from 'react-redux';
+import {RootState} from 'app/store/store';
 
 const NewsDetail = ({route}) => {
   const navigation = useNavigation();
+  const user = useSelector((state: RootState) => state.user);
   const {item} = route.params;
   const {theme} = useTheme();
 
@@ -40,11 +43,13 @@ const NewsDetail = ({route}) => {
         <Text style={styles.buttonText}>Go Back</Text>
       </TouchableOpacity>
       <View style={{height: 16}} />
-      <TouchableOpacity
-        style={[styles.button, {backgroundColor: theme.error}]}
-        onPress={() => handlePressDeleteNews(item?.id)}>
-        <Text style={styles.buttonText}>Deleted News</Text>
-      </TouchableOpacity>
+      {user.role.toString() === 'admin' && (
+        <TouchableOpacity
+          style={[styles.button, {backgroundColor: theme.error}]}
+          onPress={() => handlePressDeleteNews(item.id)}>
+          <Text style={styles.buttonText}>Hapus Berita</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

@@ -46,7 +46,6 @@ const Login = () => {
   const navigation = useNavigation();
   const {theme} = useTheme();
 
-
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleLogin = async (values: {username: string; password: string}) => {
@@ -67,10 +66,17 @@ const Login = () => {
           username: userData.username,
           speciality: userData.speciality || '',
           email: userData.email,
-          role : userData.isDoctor ? 'doctor' : (userData.isUserFamily ? 'family' : 'user'),
+          role: userData.isAdmin
+            ? 'admin'
+            : userData.isDoctor
+            ? 'doctor'
+            : userData.isUserFamily
+            ? 'family'
+            : 'user',
           isUserFos: userData.isUserFos || false,
           isUserFamily: userData.isUserFamily || false,
           isDoctor: userData.isDoctor || false,
+          isAdmin: userData.isAdmin || false,
         }),
       );
       await dispatch(updateToken({token: true}));
@@ -101,82 +107,86 @@ const Login = () => {
   return (
     <Layout>
       <KeyboardAvoidingView behavior="padding" style={{flex: 1}}>
-      <ScrollView contentContainerStyle={styles.scrollview}>
-        <View style={styles.container}>
-          <View style={styles.iconWrapper}>
-            <Image
-              source={AppIcon}
-              style={styles.appIcon}
-              resizeMode="contain"
-            />
-          </View>
-          <Card style={styles.formWrapper}>
-            <View style={styles.formHeader}>
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+        <ScrollView contentContainerStyle={styles.scrollview}>
+          <View style={styles.container}>
+            <View style={styles.iconWrapper}>
+              <Image
+                source={AppIcon}
+                style={styles.appIcon}
+                resizeMode="contain"
+              />
             </View>
-            <Formik
-              initialValues={initialValues}
-              validationSchema={LoginSchema}
-              onSubmit={handleLogin}>
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-              }) => (
-                <View style={styles.formContainer}>
-                  <Input
-                    lables="Username"
-                    testID="Login.Username"
-                    placeholder="Username/Email"
-                    onChangeText={handleChange('username')}
-                    onBlur={handleBlur('username')}
-                    value={values.username}
-                    keyboardType="email-address"
-                    error={
-                      errors.username && touched.username ? errors.username : ''
-                    }
-                    style={styles.inputContainer}
-                    leftIcon="person"
-                  />
-                  <Input
-                    lables="Password"
-                    testID="Login.Password"
-                    placeholder="Password"
-                    onChangeText={handleChange('password')}
-                    onBlur={handleBlur('password')}
-                    value={values.password}
-                    secureTextEntry
-                    error={
-                      errors.password && touched.password ? errors.password : ''
-                    }
-                    style={styles.inputContainer}
-                    leftIcon="lock-closed"
-                  />
-                  <TouchableOpacity
-                    style={[
-                      styles.loginButton,
-                      {backgroundColor: theme.primary},
-                    ]}
-                    onPress={handleSubmit}
-                    testID="Login.Button">
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.loginRegisterButton}
-                    onPress={() => setModalVisible(true)}
-                    testID="Login.Button">
-                    <Text style={styles.loginRegisterText}>Register Now</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Formik>
-          </Card>
-        </View>
-      </ScrollView>
+            <Card style={styles.formWrapper}>
+              <View style={styles.formHeader}>
+                <Text style={styles.title}>Welcome Back</Text>
+                <Text style={styles.subtitle}>Sign in to continue</Text>
+              </View>
+              <Formik
+                initialValues={initialValues}
+                validationSchema={LoginSchema}
+                onSubmit={handleLogin}>
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View style={styles.formContainer}>
+                    <Input
+                      lables="Username"
+                      testID="Login.Username"
+                      placeholder="Username/Email"
+                      onChangeText={handleChange('username')}
+                      onBlur={handleBlur('username')}
+                      value={values.username}
+                      keyboardType="email-address"
+                      error={
+                        errors.username && touched.username
+                          ? errors.username
+                          : ''
+                      }
+                      style={styles.inputContainer}
+                      leftIcon="person"
+                    />
+                    <Input
+                      lables="Password"
+                      testID="Login.Password"
+                      placeholder="Password"
+                      onChangeText={handleChange('password')}
+                      onBlur={handleBlur('password')}
+                      value={values.password}
+                      secureTextEntry
+                      error={
+                        errors.password && touched.password
+                          ? errors.password
+                          : ''
+                      }
+                      style={styles.inputContainer}
+                      leftIcon="lock-closed"
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.loginButton,
+                        {backgroundColor: theme.primary},
+                      ]}
+                      onPress={handleSubmit}
+                      testID="Login.Button">
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.loginRegisterButton}
+                      onPress={() => setModalVisible(true)}
+                      testID="Login.Button">
+                      <Text style={styles.loginRegisterText}>Register Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
+            </Card>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
       <Modal
         animationType="slide"
