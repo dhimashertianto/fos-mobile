@@ -1,12 +1,12 @@
 // userSlice.ts
-import { createSlice } from '@reduxjs/toolkit';
-import { RootState } from './store';
+import {createSlice} from '@reduxjs/toolkit';
+import {RootState} from './store';
 
 const initialState = {
   name: '',
   username: '',
   token: '',
-  role: 'user' | 'doctor' | 'admin' | 'family' ,
+  role: 'user' | 'doctor' | 'admin' | 'family' | 'exuser',
 };
 
 const userSlice = createSlice({
@@ -14,7 +14,7 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     updateUser(state, action) {
-      const { name, username, token,role } = action.payload;
+      const {name, username, token, role} = action.payload;
       state.name = name;
       state.username = username;
       state.token = token;
@@ -29,7 +29,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { updateUser, updateToken, clearUser } = userSlice.actions;
+export const {updateUser, updateToken, clearUser} = userSlice.actions;
 
 // 🔑 Selector untuk ambil user state
 export const selectUser = (state: RootState) => state.user;

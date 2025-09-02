@@ -72,6 +72,8 @@ const Login = () => {
             ? 'doctor'
             : userData.isUserFamily
             ? 'family'
+            : userData.isExUserFos
+            ? 'exuser'
             : 'user',
           isUserFos: userData.isUserFos || false,
           isUserFamily: userData.isUserFamily || false,

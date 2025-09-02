@@ -1,16 +1,16 @@
-import React,{useEffect, useState} from 'react';
+import firestore from '@react-native-firebase/firestore';
+import {useNavigation} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
 import {
-  Text,
+  Dimensions,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
-  Dimensions,
-  Image,
+  Text,
 } from 'react-native';
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
-import {useNavigation} from '@react-navigation/native';
-import  firestore  from '@react-native-firebase/firestore';
 
 const categories = [
   {
@@ -48,28 +48,30 @@ const PersonalDoctor = () => {
   const navigation = useNavigation();
   const [doctors, setDoctors] = useState([]);
 
-  useEffect(()=>{
-    if(doctors.length === 0){
+  useEffect(() => {
+    if (doctors.length === 0) {
       fetchDoctors();
     }
-  },[doctors])
+  }, [doctors]);
 
-  const fetchDoctors = async() => {
-    try{
+  const fetchDoctors = async () => {
+    try {
       const doctorSnapshot = await firestore()
-      .collection('users')
-      .where('isDoctor','==',true)
-      .get();
-      const doctorList = doctorSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-      setDoctors(doctorList.sort((a,b)=> a?.name - b?.name));
-      console.log("Fetched doctors:",doctorList);
-    }catch(error){
-      console.error("Error fetching doctors:",error);
+        .collection('users')
+        .where('isDoctor', '==', true)
+        .get();
+      const doctorList = doctorSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setDoctors(doctorList.sort((a, b) => a?.name - b?.name));
+      console.log('Fetched doctors:', doctorList);
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
     }
-  }
+  };
 
   const handleDoctorPress = (doctor: any) => {
-
     navigation.navigate('ChatRoom', {
       doctorId: doctor.id,
       doctorName: doctor.name,

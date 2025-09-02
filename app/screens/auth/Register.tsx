@@ -25,20 +25,51 @@ const Register = () => {
   const [isUndergoingCancer, setIsUndergoingCancer] = useState(false);
   const [isPasiveSmoker, setIsPasiveSmoker] = useState(false);
   const [isUserFos, setUserFos] = useState(true);
+  const [isExUserFos, setExUserFos] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const navigation = useNavigation();
   const checkUsernameExists = async (username: string) => {
     const userSnapshot = await firestore()
-      .collection('users')  
+      .collection('users')
       .where('username', '==', username)
       .get();
     return !userSnapshot.empty;
   };
-  const handleRegister = async () => {
+  const handleRegister = () => {
+    // Jika isUserFos true, tampilkan konfirmasi terlebih dahulu
+    if (isUserFos) {
+      Alert.alert(
+        'Confirm Registration',
+        'You are registering as a new FOS user. Continue?',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'Yes', onPress: () => proceedRegistration()},
+          // {text: 'Yes', onPress: () => proceedRegistration(true)},
+        ],
+      );
+    } else {
+      Alert.alert(
+        'Confirm Registration',
+        'You are registering as a existing FOS user. Continue?',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'Yes', onPress: () => proceedRegistration()},
+        ],
+      );
+    }
+  };
+
+  const proceedRegistration = async () => {
     setIsLoading(true);
+
     const exists = await checkUsernameExists(username);
-   
+    if (exists) {
+      Alert.alert('Username already exists. Please choose another one.');
+      setIsLoading(false);
+      return;
+    }
+
     const formData = {
       username,
       email,
@@ -47,33 +78,22 @@ const Register = () => {
       isCancer,
       isUndergoingCancer,
       isPasiveSmoker,
-      isUserFos,
+      isUserFos: isUserFos,
+      isExUserFos: isExUserFos,
       notificationsEnabled,
     };
-    if (exists) {
-      Alert.alert('Username already exists. Please choose another one.');
+
+    try {
+      await firestore().collection('users').add(formData);
+      Alert.alert('Registration Successful', 'You can now log in.', [
+        {text: 'OK', onPress: () => navigation.navigate('Login')},
+      ]);
+    } catch (error) {
+      console.error('Error adding user:', error);
+      Alert.alert('Registration Failed', 'Please try again.');
+    } finally {
       setIsLoading(false);
-      return;
     }
-    else{
-      firestore()
-      .collection('users')
-      .add(formData)
-      .then(() => {
-        console.log('User added!');
-        Alert.alert('Registration Successful', 'You can now log in.', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error adding user:', error);
-        Alert.alert('Registration Failed', 'Please try again.');
-        setIsLoading(false);
-      });
-    }
-    console.log('Form Data:', formData);
-    navigation.navigate('Login');
   };
 
   return (
@@ -164,9 +184,25 @@ const Register = () => {
           <View style={styles.switchRow}>
             <Text style={styles.question}>Are you a new user FOS?</Text>
             <Switch
-              disabled
               value={isUserFos}
-              onValueChange={setUserFos}
+              onValueChange={res => {
+                setUserFos(res);
+                setExUserFos(!res);
+              }}
+              ios_backgroundColor="#ccc"
+              trackColor={{false: '#767577', true: '#34C759'}}
+              thumbColor={isUserFos ? '#fff' : '#f4f3f4'}
+              style={styles.switch}
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <Text style={styles.question}>Are you ex-smoker?</Text>
+            <Switch
+              value={isExUserFos}
+              onValueChange={res => {
+                setUserFos(!res);
+                setExUserFos(res);
+              }}
               ios_backgroundColor="#ccc"
               trackColor={{false: '#767577', true: '#34C759'}}
               thumbColor={isUserFos ? '#fff' : '#f4f3f4'}

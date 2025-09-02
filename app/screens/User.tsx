@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
 import Layout from '../components/Layout';
 import {useTheme} from '../theme/useTheme';
 import {useNavigation} from '@react-navigation/native';
+import firestore, {doc} from '@react-native-firebase/firestore';
+import {useSelector} from 'react-redux';
+import {RootState} from 'app/store/store';
 
 // Sample data for both categories
 const successfulQuitters = [
@@ -45,21 +48,76 @@ const tryingToQuit = [
 
 const User = () => {
   const {theme} = useTheme();
+  const userLogin = useSelector((state: RootState) => state.user);
+
   const navigation = useNavigation();
+  const [users, setUsers] = useState([]);
+  const [exUser, setExUser] = useState([]);
+
+  useEffect(() => {
+    fetchUser();
+    fetchExUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const userSnapshot = await firestore()
+        .collection('users')
+        .where('isUserFos', '==', true)
+        .get({source: 'server'});
+      const userList = userSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter(
+          user =>
+            user.username?.toLowerCase() !==
+            userLogin.username.toLocaleLowerCase(),
+        );
+      setUsers(userList.sort((a, b) => a?.name - b?.name));
+    } catch (error) {
+      console.error('Error fetching doctors: ', error);
+    }
+  };
+
+  const fetchExUser = async () => {
+    try {
+      const userSnapshot = await firestore()
+        .collection('users')
+        .where('isExUserFos', '==', true)
+        .get({source: 'server'});
+      const userList = userSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter(
+          user =>
+            user.username?.toLowerCase() !==
+            userLogin.username.toLocaleLowerCase(),
+        );
+      console.log('fetchExUser', userList);
+      setExUser(userList.sort((a, b) => a?.name - b?.name));
+    } catch (error) {
+      console.error('Error fetching doctors: ', error);
+    }
+  };
+
+  const handleDoctorPress = (doctor: any) => {
+    console.log('doctor', doctor);
+
+    navigation.navigate('ChatRoom', {
+      doctorId: doctor.id,
+      doctorName: doctor.username,
+      doctorSpeciality: doctor.email,
+      doctorImage: require('../assets/images/doctor_male.png'),
+    });
+  };
 
   const renderUserCard = ({item, type}: {item: any; type: string}) => (
     <Pressable
-      onPress={() =>
-        navigation.navigate('ChatRoom', {
-          doctorId: item.id,
-          doctorName: item.name,
-          doctorSpeciality:
-            type === 'successful'
-              ? `${item.daysSmokeFree} hari bebas rokok`
-              : `Progress: ${item.currentProgress}`,
-          doctorImage: item.avatar,
-        })
-      }
+      onPress={() => handleDoctorPress(item)}
       style={({pressed}) => [
         styles.card,
         {
@@ -67,13 +125,12 @@ const User = () => {
           opacity: pressed ? 0.8 : 1,
         },
       ]}>
-      <Image source={item.avatar} style={styles.userImage} />
-      <Text style={styles.userName}>{item.name}</Text>
-      <Text style={styles.userStatus}>
-        {type === 'successful'
-          ? `${item.daysSmokeFree} hari bebas rokok`
-          : `Progress: ${item.currentProgress}`}
-      </Text>
+      <Image
+        source={require('../assets/images/avatar_male.png')}
+        style={styles.userImage}
+      />
+      <Text style={styles.userName}>{item.username}</Text>
+      <Text style={styles.userStatus}>{item.email}</Text>
     </Pressable>
   );
 
@@ -82,7 +139,7 @@ const User = () => {
       <View style={styles.categoryContainer}>
         <Text style={styles.categoryTitle}>Berhasil Berhenti Merokok</Text>
         <FlatList
-          data={successfulQuitters}
+          data={exUser}
           renderItem={({item}) => renderUserCard({item, type: 'successful'})}
           keyExtractor={item => item.id}
           numColumns={2}
@@ -94,7 +151,7 @@ const User = () => {
       <View style={styles.categoryContainer}>
         <Text style={styles.categoryTitle}>Sedang Berhenti Merokok</Text>
         <FlatList
-          data={tryingToQuit}
+          data={users}
           renderItem={({item}) => renderUserCard({item, type: 'trying'})}
           keyExtractor={item => item.id}
           numColumns={2}

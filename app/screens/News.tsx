@@ -22,6 +22,7 @@ import {RootState} from 'app/store/store';
 const News = () => {
   const navigation = useNavigation();
   const user = useSelector((state: RootState) => state.user);
+  console.log(user);
 
   const [berita, setBerita] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
